@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -49,6 +51,7 @@ INSTALLED_APPS += ['corsheaders']
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # Must be at the top
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # For static files in production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -82,10 +85,11 @@ WSGI_APPLICATION = 'reporttool.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL', f'sqlite:///{BASE_DIR / "db.sqlite3"}'),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 
@@ -128,13 +132,17 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# Only needed for production
-STATIC_ROOT = BASE_DIR / "staticfiles"
+# STATIC_ROOT must always be set for collectstatic to work
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# For development
-STATICFILES_DIRS = [
-    BASE_DIR / "static",  # if you have a static folder in your project
-]
+if not DEBUG:
+    # Use WhiteNoise for static file serving in production
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+else:
+    # For development - use STATICFILES_DIRS
+    STATICFILES_DIRS = [
+        BASE_DIR / "static",  # if you have a static folder in your project
+    ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
