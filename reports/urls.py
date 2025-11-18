@@ -4,6 +4,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .views import (
     get_current_user, 
     user_list_create, 
+    user_detail_update_delete,
     department_list_create,
     report_list_create, 
     report_update_delete, 
@@ -18,6 +19,7 @@ urlpatterns = [
     # User Endpoints
     path('auth/me/', get_current_user, name='get_current_user'),
     path('users/', user_list_create, name='user_list_create'),
+    path('users/<int:pk>/', user_detail_update_delete, name='user_detail_update_delete'),
 
     # Department Endpoints
     path('departments/', department_list_create, name='department_list_create'),
